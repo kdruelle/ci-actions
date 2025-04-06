@@ -34,7 +34,7 @@ runs:
 
           if [ "$BUILT_DIGEST" != "$EXISTING_DIGEST" ]; then
             echo "Digest mismatch – pushing image for $tag"
-            skopeo copy --preserve-digests --dest-credentials "${{ inputs.username }}:${{ inputs.password }}" docker-daemon:$tag docker://$tag
+            skopeo copy --preserve-digests --dest-creds "${{ inputs.username }}:${{ inputs.password }}" docker-daemon:$tag docker://$tag
           else
             echo "No changes – skipping push for $tag"
           fi
