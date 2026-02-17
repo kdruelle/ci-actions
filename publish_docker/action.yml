@@ -26,7 +26,11 @@ runs:
           [ -z "$tag" ] && continue
           echo "Checking image digest for tag: $tag"
 
-          BUILT_DIGEST=$(skopeo inspect "docker-daemon:$tag" | jq -r ".Digest" || echo "")
+          IMAGE_TAR="image-$(echo $tag | tr '/:' '_').tar"
+          echo "Saving image to OCI archive..."
+          docker save "$tag" -o "$IMAGE_TAR"
+
+          BUILT_DIGEST=$(skopeo inspect "docker-archive:$IMAGE_TAR" | jq -r ".Digest" || echo "")
           EXISTING_DIGEST=$(skopeo inspect "docker://$tag" | jq -r ".Digest" || echo "")
 
           echo "Image: $tag"
@@ -35,7 +39,7 @@ runs:
 
           if [ "$BUILT_DIGEST" != "$EXISTING_DIGEST" ]; then
             echo "Digest mismatch – pushing image for $tag"
-            skopeo copy --preserve-digests --dest-creds "${{ inputs.username }}:${{ inputs.password }}" "docker-daemon:$tag" "docker://$tag"
+            skopeo copy --preserve-digests --dest-creds "${{ inputs.username }}:${{ inputs.password }}" "docker-archive:$IMAGE_TAR" "docker://$tag"
           else
             echo "No changes – skipping push for $tag"
           fi
